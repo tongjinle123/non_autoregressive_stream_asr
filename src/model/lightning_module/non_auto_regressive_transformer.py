@@ -1,5 +1,6 @@
 import torch as t 
 import pytorch_lightning as pl
+from model.module.decoder import DecoderOutput
 from src.model.module import Encoder
 from src.model.module import Decoder
 from src.model.module import TriggerDotAttentionMask
@@ -52,6 +53,19 @@ class NART(pl.LightningModule):
         )
         self.att_ce_loss = LabelSmoothingLoss(hparams.vocab_size)
         self.att_lg_loss = LabelSmoothingLoss(4)
+
+    def decode(self, feature, feature_length):
+        encoded_feature, ctc_language_output, ctc_output, feature_length, feature_max_length = self.encoder(
+            feature, feature_length
+        )
+        input_, input_mask, trigger_mask = self.trigger(
+            ctc_output
+        )
+        decoder_output, decoder_language_output = self.decoder(
+            input_, input_mask, encoded_feature, trigger_mask
+        )
+        output_id = t.argmax(decoder_output, -1)
+        return output_id
     
     def training_step(self, batch, batch_idx):
         feature, feature_length, ctc_target, att_input, att_output, target_length, ctc_lan_target, att_lan_target = \
@@ -89,6 +103,15 @@ class NART(pl.LightningModule):
         log_dict = {'val_loss': loss.item(), 'val_att_loss': att_loss.item(), 'val_ctc_loss': ctc_loss.item(), 'val_att_lan_loss': att_lan_loss.item(), 'val_ctc_lan_loss': ctc_lan_loss.item()}
         self.log_dict(dictionary=log_dict, prog_bar=False, on_step=False, on_epoch=True)
         return {'val_loss': loss, 'val_att_loss': att_loss, 'val_ctc_loss': ctc_loss, 'val_att_lan_loss': att_lan_loss, 'val_ctc_lan_loss': ctc_lan_loss}
+
+    def test_step(self, batch, batch_idx):
+        feature, feature_length, ctc_target, att_input, att_output, target_length, ctc_lan_target, att_lan_target = \
+            batch[0], batch[1],batch[2], batch[3], batch[4],batch[5],batch[6],batch[7]
+        encoded_feature, ctc_language_output, ctc_output, feature_length, feature_max_length = self.encoder(feature, feature_length)
+        input_, input_mask, trigger_mask = self.trigger(ctc_output)
+        decoder_output, decoder_language_output = self.decoder(input_, input_mask, encoded_feature, trigger_mask)
+        decoder_output_id = t.argmax(decoder_output, -1)
+        return decoder_output_id
 
     def validation_epoch_end(self, outputs):
         val_loss = t.stack([i['val_loss'] for i in outputs]).mean()
@@ -166,5 +189,5 @@ class NART(pl.LightningModule):
         parser.add_argument('--n_freq_mask', type=int, default=1)
         parser.add_argument('--time_mask_length', type=int, default=80)
         parser.add_argument('--freq_mask_length', type=int, default=20)
-        parser.add_argument('--ctc_weight', type=float, default=0.8)
+        parser.add_argument('--ctc_weight', type=float, default=0.4)
         return parser

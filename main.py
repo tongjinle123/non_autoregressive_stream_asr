@@ -29,7 +29,7 @@ def main(args):
         reload_dataloaders_every_epoch=True, max_epochs=500, min_epochs=500,
         weights_summary=None,
         accumulate_grad_batches=4, 
-        # resume_from_checkpoint='ckpt/test/epoch=72-val_loss= 0.4167.ckpt',
+        resume_from_checkpoint='ckpt/NART/version_31/epoch=12-val_loss= 2.1670.ckpt',
         flush_logs_every_n_steps=5000,
         log_every_n_steps=5000,
         limit_val_batches=0.5,

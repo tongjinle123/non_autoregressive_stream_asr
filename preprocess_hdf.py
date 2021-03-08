@@ -56,7 +56,7 @@ if __name__ == '__main__':
     # hdf_files = [os.path.join(hdf_root, i.replace('.csv', '.hdf')) for i in FILES]
     # files = [os.path.join(csv_root, i) for i in FILES]
     
-    
+     
     # file = 'ce_200.csv'
     # builder = Builder()
     # for rate in [0.9, 0.95, 1.05, 1.1]:
