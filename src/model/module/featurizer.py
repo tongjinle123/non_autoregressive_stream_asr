@@ -3,6 +3,7 @@ import torch as t
 from src.model.layer.spec_augment import SpecAugment
 from tqdm import tqdm 
 import random
+ta.set_audio_backend('sox_io')
 
 
 class Featurizer(t.nn.Module):
@@ -11,7 +12,6 @@ class Featurizer(t.nn.Module):
         freq_mask_length=20, time_mask_length=80
         ):
         super(Featurizer, self).__init__()
-        ta.set_audio_backend('sox_io')
         self.n_freq_mask = n_freq_mask
         self.n_time_mask = n_time_mask
         self.freq_mask_length = freq_mask_length

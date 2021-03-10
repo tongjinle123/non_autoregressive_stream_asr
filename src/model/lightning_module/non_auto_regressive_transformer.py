@@ -1,12 +1,12 @@
 import torch as t 
 import pytorch_lightning as pl
-from model.module.decoder import DecoderOutput
+import torch as t 
 from src.model.module import Encoder
 from src.model.module import Decoder
 from src.model.module import TriggerDotAttentionMask
 from src.model.module import InputRegularizer, MaskRegularizer
 from src.model.metrics import LabelSmoothingLoss
-from src.tools.ranger import Ranger
+from ranger import Ranger
 from argparse import ArgumentParser
 from src.model.layer.spec_augment import SpecAugment
 
@@ -15,46 +15,44 @@ class NART(pl.LightningModule):
     def __init__(self, hparams):
         super(NART, self).__init__()
         self.hparams = hparams
-        self.lr = hparams.lr
+        self.lr = hparams['lr']
         self.spec_augment = SpecAugment(
-            n_time_mask=hparams.n_time_mask, 
-            n_freq_mask=hparams.n_freq_mask,
-            time_mask_length=hparams.time_mask_length, 
-            freq_mask_length=hparams.freq_mask_length,
+            n_time_mask=hparams['n_time_mask'], 
+            n_freq_mask=hparams['n_freq_mask'],
+            time_mask_length=hparams['time_mask_length'], 
+            freq_mask_length=hparams['freq_mask_length'],
             p=0.2
         )
         self.encoder = Encoder(
-            model_size=hparams.model_size, 
-            dropout=hparams.dropout,
-            feed_forward_size=hparams.feed_forward_size,
-            hidden_size=hparams.hidden_size,
-            num_layer=hparams.encoder_num_layer,
-            left=hparams.left, 
-            right=hparams.right,
-            num_head=hparams.num_head,
-            vocab_size=hparams.vocab_size
+            model_size=hparams['model_size'], 
+            dropout=hparams['dropout'],
+            feed_forward_size=hparams['feed_forward_size'],
+            hidden_size=hparams['hidden_size'],
+            num_layer=hparams['encoder_num_layer'],
+            left=hparams['left'], 
+            right=hparams['right'],
+            num_head=hparams['num_head'],
+            vocab_size=hparams['vocab_size']
         )
-        self.trigger = t.jit.script(
-            TriggerDotAttentionMask(blank_id=hparams.blank_id, trigger_eps=6)
-        )
+        self.trigger = t.jit.script(TriggerDotAttentionMask(blank_id=hparams['blank_id'], trigger_eps=6))
         self.ipr = InputRegularizer()
         self.mr = MaskRegularizer()
         self.decoder = Decoder(
-            model_size=hparams.model_size, 
-            dropout=hparams.dropout,
-            feed_forward_size=hparams.feed_forward_size,
-            hidden_size=hparams.hidden_size,
-            num_layer=hparams.decoder_num_layer, 
-            num_head=hparams.num_head, 
-            vocab_size=hparams.vocab_size, 
-            blank_id=hparams.blank_id, 
-            place_id=hparams.place_id, 
-            max_length=hparams.decoder_max_length
+            model_size=hparams['model_size'], 
+            dropout=hparams['dropout'],
+            feed_forward_size=hparams['feed_forward_size'],
+            hidden_size=hparams['hidden_size'],
+            num_layer=hparams['decoder_num_layer'], 
+            num_head=hparams['num_head'], 
+            vocab_size=hparams['vocab_size'], 
+            blank_id=hparams['blank_id'], 
+            place_id=hparams['place_id'], 
+            max_length=hparams['decoder_max_length']
         )
-        self.att_ce_loss = LabelSmoothingLoss(hparams.vocab_size)
+        self.att_ce_loss = LabelSmoothingLoss(hparams['vocab_size'])
         self.att_lg_loss = LabelSmoothingLoss(4)
 
-    def decode(self, feature, feature_length):
+    def forward(self, feature, feature_length):
         encoded_feature, ctc_language_output, ctc_output, feature_length, feature_max_length = self.encoder(
             feature, feature_length
         )
@@ -65,7 +63,8 @@ class NART(pl.LightningModule):
             input_, input_mask, encoded_feature, trigger_mask
         )
         output_id = t.argmax(decoder_output, -1)
-        return output_id
+        ctc_output_id = t.argmax(ctc_output, -1)
+        return output_id, ctc_output_id
     
     def training_step(self, batch, batch_idx):
         feature, feature_length, ctc_target, att_input, att_output, target_length, ctc_lan_target, att_lan_target = \
@@ -128,6 +127,8 @@ class NART(pl.LightningModule):
             }
         return ret
 
+    # def configure_optimizers(self):
+    #     return t.optim.AdamW(self.parameters(), lr = self.lr)
     def configure_optimizers(self):
         opt = Ranger(self.parameters(), lr = self.lr)
         return opt
@@ -149,7 +150,7 @@ class NART(pl.LightningModule):
         prob = t.nn.functional.log_softmax(ctc_output, -1)
         ctc_loss = t.nn.functional.ctc_loss(
             prob.transpose(0, 1), ctc_target, feature_length, target_length,
-            blank=5, zero_infinity=True
+            blank=self.hparams.blank_id, zero_infinity=True
         )
         return ctc_loss
 
@@ -189,5 +190,5 @@ class NART(pl.LightningModule):
         parser.add_argument('--n_freq_mask', type=int, default=1)
         parser.add_argument('--time_mask_length', type=int, default=80)
         parser.add_argument('--freq_mask_length', type=int, default=20)
-        parser.add_argument('--ctc_weight', type=float, default=0.4)
+        parser.add_argument('--ctc_weight', type=float, default=0.3)
         return parser

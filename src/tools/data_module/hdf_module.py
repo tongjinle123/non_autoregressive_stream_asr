@@ -74,8 +74,8 @@ class DataModule(LightningDataModule):
         self.hdf_root = 'data/hdf'
         self.train_files = [
             'data_aishell_train.hdf', 'data_aishell_dev.hdf',
-            # 'aidatatang_200zh.hdf', 'AISHELL-2.hdf', 'magic_data_train.hdf', 'magic_data_dev.hdf', 
-            # 'prime.hdf', 'stcmds.hdf', 
+            'aidatatang_200zh.hdf', 'AISHELL-2.hdf', 'magic_data_train.hdf', 'magic_data_dev.hdf', 
+            'prime.hdf', 'stcmds.hdf', 
             # 'libri_360.hdf', 'libri_500.hdf',
             # 'ce_200.hdf', '90_ce_200.hdf', '95_ce_200.hdf','105_ce_200.hdf','110_ce_200.hdf',
             # 'libri_360.hdf', 'libri_500.hdf'
@@ -83,7 +83,7 @@ class DataModule(LightningDataModule):
         self.train_files = [os.path.join(self.hdf_root, i) for i in self.train_files]
         self.dev_files = [
             'data_aishell_test.hdf',
-            # 'magic_data_test.hdf', 
+            'magic_data_test.hdf', 
             # 'ce_20_dev.hdf',
             # 'libri_100.hdf', 
         ]

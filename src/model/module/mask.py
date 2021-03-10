@@ -68,7 +68,7 @@ class TriggerDotAttentionMask(t.nn.Module):
         # build trigger_mask 
         pad_column = blank_mask.sum(1).ne(0).long()
         blank_mask = t.cat([blank_mask, pad_column.unsqueeze(1)], 1)
-        split_size: List[int] = blank_mask.sum(1).tolist()
+        split_size: List[int] = blank_mask.sum(1).tolist() # add type hint for jit script 
         position = blank_mask.nonzero().narrow(1,1,1).squeeze(1) + 1 + self.trigger_eps
         trigger_mask = self.pad_mask(position, length).long()
         trigger_mask = trigger_mask.split_with_sizes(split_size, 0)

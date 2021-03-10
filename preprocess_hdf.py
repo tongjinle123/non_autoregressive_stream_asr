@@ -31,40 +31,40 @@ if __name__ == '__main__':
     featurizer.load_mean_std('mean_std.pth')
     csv_root = 'data/manifest'
     hdf_root = 'data/hdf'
-    FILES = [
-        'data_aishell_train.csv','data_aishell_dev.csv','data_aishell_test.csv', 
-        'aidatatang_200zh.csv',
-        'AISHELL-2.csv','c_500.csv','magic_data_train.csv','magic_data_dev.csv',
-        'magic_data_test.csv','prime.csv','stcmds.csv',
-        'ce_200.csv',
-        'ce_20_dev.csv','libri_100.csv','libri_360.csv','libri_500.csv'
-        ]
-    hdf_files = [os.path.join(hdf_root, i.replace('.csv', '.hdf')) for i in FILES]
-    files = [os.path.join(csv_root, i) for i in FILES]
-    builder = Builder()
-    for file, hdf_file in zip(files, hdf_files):
-        builder.build(hdf_file, line_iter(file, featurizer, vocab))
-
     # FILES = [
-    #     # 'data_aishell_train.csv','data_aishell_dev.csv','data_aishell_test.csv', 
-    #     # 'aidatatang_200zh.csv',
-    #     # 'AISHELL-2.csv','c_500.csv','magic_data_train.csv','magic_data_dev.csv',
-    #     # 'magic_data_test.csv','prime.csv','stcmds.csv',
+    #     'data_aishell_train.csv','data_aishell_dev.csv','data_aishell_test.csv', 
+    #     'aidatatang_200zh.csv',
+    #     'AISHELL-2.csv','c_500.csv','magic_data_train.csv','magic_data_dev.csv',
+    #     'magic_data_test.csv','prime.csv','stcmds.csv',
     #     'ce_200.csv',
-    #     # 'ce_20_dev.csv','libri_100.csv','libri_360.csv','libri_500.csv'
+    #     'ce_20_dev.csv','libri_100.csv','libri_360.csv','libri_500.csv'
     #     ]
     # hdf_files = [os.path.join(hdf_root, i.replace('.csv', '.hdf')) for i in FILES]
     # files = [os.path.join(csv_root, i) for i in FILES]
-    
-     
-    # file = 'ce_200.csv'
     # builder = Builder()
-    # for rate in [0.9, 0.95, 1.05, 1.1]:
-    #     hdf_file = os.path.join(hdf_root, str(int(rate*100)) + '_' + file.replace('.csv','.hdf'))
-    #     builder.build(hdf_file, line_iter(os.path.join(csv_root, file), featurizer, vocab, rate))
-
     # for file, hdf_file in zip(files, hdf_files):
     #     builder.build(hdf_file, line_iter(file, featurizer, vocab))
+
+    FILES = [
+        # 'data_aishell_train.csv','data_aishell_dev.csv','data_aishell_test.csv', 
+        # 'aidatatang_200zh.csv',
+        # 'AISHELL-2.csv','c_500.csv','magic_data_train.csv','magic_data_dev.csv',
+        # 'magic_data_test.csv','prime.csv','stcmds.csv',
+        'ce_200.csv',
+        # 'ce_20_dev.csv','libri_100.csv','libri_360.csv','libri_500.csv'
+        ]
+    hdf_files = [os.path.join(hdf_root, i.replace('.csv', '.hdf')) for i in FILES]
+    files = [os.path.join(csv_root, i) for i in FILES]
+    
+     
+    file = 'ce_200.csv'
+    builder = Builder()
+    for rate in [0.9, 0.95, 1.05, 1.1]:
+        hdf_file = os.path.join(hdf_root, str(int(rate*100)) + '_' + file.replace('.csv','.hdf'))
+        builder.build(hdf_file, line_iter(os.path.join(csv_root, file), featurizer, vocab, rate))
+
+    for file, hdf_file in zip(files, hdf_files):
+        builder.build(hdf_file, line_iter(file, featurizer, vocab))
 
 
 

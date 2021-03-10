@@ -16,7 +16,7 @@ class Conv1dSubsampling(t.nn.Module):
             t.nn.Conv1d(in_channels=256, out_channels=512, kernel_size=3, stride=2, groups=64),
             GELU(),
         )
-        # self.pos_emb = PositionEmbedding(model_size, max_len=500)
+        self.pos_emb = PositionEmbedding(model_size, max_len=500)
 
         t.nn.init.kaiming_normal_(self.conv[0].weight)
         t.nn.init.kaiming_normal_(self.conv[2].weight)
@@ -28,5 +28,5 @@ class Conv1dSubsampling(t.nn.Module):
         feature_max_length = feature_length.max()
         x_mask = self.pad_mask(feature_length, feature_max_length)
         x = self.conv(x.transpose(1, 2)).transpose(1, 2)
-        # x = self.pos_emb(x)
+        x = self.pos_emb(x)
         return x, x_mask, feature_length, feature_max_length
